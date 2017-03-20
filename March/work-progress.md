@@ -1,7 +1,15 @@
 #三月份学习整理
 ---
 ##待完成论文相关工作
+###整体工作思路
+---
+CTS-SS --> Fortran代码实现 --> 适应度函数编写 --> 接入GFDL CM模式 --> 结果分析
 
+####CTS-SS
+#####TS
+* 
+
+---
 ##相关概念
 ###<font color=red>CNOP</font>
 
@@ -26,5 +34,5 @@
 ###<font color=red>MM5模式</font>
 
 ---
-###GFDL CM模式记录
+###GFDL CM模式使用记录
 
