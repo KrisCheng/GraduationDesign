@@ -6,6 +6,7 @@ program main
   integer :: iteTime = 10,i
   real ,dimension(10) :: initNumber
   real ,dimension(10) :: initCandidate
+  real :: tbPara = 0.01
   real :: pi = 3.1415926
   call random_seed ()
   !generate 10 numbers randomly
@@ -15,5 +16,8 @@ program main
     write(*,*) initCandidate(i)
   end do
   !choose the best initial number in the 10 numbers
+  !here is the fitness function and pick up the best initial value
+
+function inTabuList()
   re_i = system("pause")
 end
