@@ -15,6 +15,5 @@ program main
     write(*,*) initCandidate(i)
   end do
   !choose the best initial number in the 10 numbers
-
   re_i = system("pause")
 end
