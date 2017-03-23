@@ -7,7 +7,7 @@ import java.util.Random;
 /**
  * Created by Kris on 3/22/2017.
  */
-public class CTS_SS {
+public class TSP_TS {
     private int MAX_GEN;// 迭代次数
     private int N;// 每次搜索邻居个数
     private int ll;// 禁忌长度
@@ -30,10 +30,10 @@ public class CTS_SS {
 
     private Random random;
 
-    public CTS_SS() {
+    public TSP_TS() {
 
     }
-    public CTS_SS(int n, int g, int c, int m) {
+    public TSP_TS(int n, int g, int c, int m) {
         cityNum = n;
         MAX_GEN = g;
         N = c;
@@ -251,7 +251,7 @@ public class CTS_SS {
      */
     public static void main(String[] args) throws IOException {
         System.out.println("Start....");
-        CTS_SS tabu = new CTS_SS(48, 1000, 200, 20);
+        TSP_TS tabu = new TSP_TS(48, 1000, 200, 20);
         tabu.init("data.txt");
         tabu.solve();
     }
