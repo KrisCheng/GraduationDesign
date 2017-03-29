@@ -1,5 +1,7 @@
 package algorithm;
 
+import Jama.Matrix;
+
 import java.io.IOException;
 import java.util.Random;
 
@@ -20,7 +22,7 @@ public class CTS_SS {
     private int MAX_CYCLE1; //阶段一迭代次数
     private int MAX_CYCLE2; //阶段二迭代次数
     private double tabuParameter; //禁忌判定参数
-    private double[][] tabuList = new double[tabuLength][Dim]; //禁忌表
+    private double[][] tabuList = new double[Dim][tabuLength]; //禁忌表
     private double[][] initList; //候选初始解列表
     private double[] initValue = new double[Dim]; //初始解
     private double initEvaluation; //初始解扰动值
@@ -33,11 +35,13 @@ public class CTS_SS {
     Random random = new Random(); //生成随机数
     private int curCycle; //当前迭代次数
 
-    public CTS_SS(int s1, int r1, int s2, int r2, float para){
+    public CTS_SS(int s1, int r1, int cycle1, int s2, int r2, int cycle2, float para){
         m1 = s1;
         R1 = r1;
+        MAX_CYCLE1 = cycle1;
         m2 = s2;
         R2 = r2;
+        MAX_CYCLE2 = cycle2;
         tabuParameter = para;
     }
 
@@ -57,6 +61,7 @@ public class CTS_SS {
             for(int j = 0; j < Dim; j++){
                 initList[i][j] = Math.sin(Math.PI * Math.random());
             }
+            Matrix init = new Matrix(initList);
             //todo:调用shell模式求解,在满足约束的条件(即禁忌判断参数)下,与适应度函数做对比,得到最优初始解
         }
     }
@@ -135,7 +140,7 @@ public class CTS_SS {
             }
         }
         //3.打印结果
-        
+
     }
 
     public static void main(String[] args) {
