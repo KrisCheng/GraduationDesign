@@ -1,6 +1,7 @@
 package algorithm;
 
 import Jama.Matrix;
+import shh.connect.SSHCommandExecutor;
 
 import java.io.IOException;
 import java.util.Random;
@@ -34,6 +35,7 @@ public class CTS_SS {
     private double localEvaluation; //局部解扰动值
     Random random = new Random(); //生成随机数
     private int curCycle; //当前迭代次数
+    SSHCommandExecutor sshExecutor = new SSHCommandExecutor("10.60.43.93", "root", "123123");//SSH连接并调用Shell
 
     public CTS_SS(int s1, int r1, int cycle1, int s2, int r2, int cycle2, float para){
         m1 = s1;

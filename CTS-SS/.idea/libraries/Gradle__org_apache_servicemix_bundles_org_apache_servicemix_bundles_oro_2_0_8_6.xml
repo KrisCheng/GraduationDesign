@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: org.apache.servicemix.bundles:org.apache.servicemix.bundles.oro:2.0.8_6">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.servicemix.bundles/org.apache.servicemix.bundles.oro/2.0.8_6/2474f410363325a66fd5933ce286fe8a07cebe58/org.apache.servicemix.bundles.oro-2.0.8_6.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.servicemix.bundles/org.apache.servicemix.bundles.oro/2.0.8_6/f6ab0ba919d4421167ee811199d38a1f710c4bf3/org.apache.servicemix.bundles.oro-2.0.8_6-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
