@@ -46,8 +46,9 @@ public class SSHCommandExecutor {
         try {
             // Create and connect session.
             Session session = jsch.getSession(username, ipAddress, DEFAULT_SSH_PORT);
+            session.setConfig( "StrictHostKeyChecking" , "no" ); // 不验证host-key，验证会失败。
             session.setPassword(password);
-            session.setUserInfo(userInfo);
+//            session.setUserInfo(userInfo);
             session.connect();
 
             // Create and connect channel.
@@ -89,13 +90,4 @@ public class SSHCommandExecutor {
         return stdout;
     }
 
-    public static void main(final String [] args) {
-        SSHCommandExecutor sshExecutor = new SSHCommandExecutor("10.60.43.93", "root", "123123");
-        //此处写入需要执行的命令
-        sshExecutor.execute("cd Documents/; mkdir ess; mkdir test");
-        Vector<String> stdout = sshExecutor.getStandardOutput();
-        for (String str : stdout) {
-            System.out.println(str);
-        }
-    }
 }

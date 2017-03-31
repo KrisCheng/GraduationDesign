@@ -45,7 +45,7 @@ public class CTS_SS {
     Random random = new Random(); //生成随机数
     private int curCycle; //当前迭代次数
     Matrix tempTransMatrix; //降维后矩阵
-    SSHCommandExecutor sshExecutor = new SSHCommandExecutor("10.60.43.93", "root", "123123");//SSH连接并调用Shell
+    SSHCommandExecutor sshExecutor = new SSHCommandExecutor("10.68.0.1", "nscc1735_LX", "N20163941");//SSH连接并调用Shell
 
     public CTS_SS(int s1, int r1, int cycle1, int s2, int r2, int cycle2, double para) {
         m1 = s1;
@@ -99,7 +99,7 @@ public class CTS_SS {
 
 
             //调用Shell,写入需要执行的命令
-            //sshExecutor.execute("cd Documents/; mkdir ess; mkdir test");
+            sshExecutor.execute("mkdir ss");
             //todo:调用shell模式求解,在满足约束的条件(即禁忌判断参数)下,与适应度函数做对比,得到最优初始解
         }
     }
