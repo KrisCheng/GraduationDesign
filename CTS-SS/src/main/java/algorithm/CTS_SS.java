@@ -1,8 +1,6 @@
 package algorithm;
 
 import Jama.Matrix;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import shh.connect.SSHCommandExecutor;
@@ -89,6 +87,9 @@ public class CTS_SS {
     //生成Sine初值
     public void initSineMap() {
         initList = new double[Dim][initNumber];
+        //1.进入到exp目录下
+        sshExecutor.execute("cd GFDL-CM2.1p1/exp/;bsub fr21.csh");
+
         for (int i = 0; i < initNumber; i++) {
             for (int j = 0; j < Dim; j++) {
                 initList[i][j] = Math.sin(Math.PI * Math.random());//通过sin函数获取初始解
@@ -97,13 +98,10 @@ public class CTS_SS {
             //获得initNumber个初始解
             Matrix initMatrix = tempTransMatrix.times(initSineMatrix);
 
-
             //调用Shell,写入需要执行的命令
-            sshExecutor.execute("mkdir ss");
             //todo:调用shell模式求解,在满足约束的条件(即禁忌判断参数)下,与适应度函数做对比,得到最优初始解
         }
     }
-
 
     //获取CNOP值
     public double evaluate(double[] chr) {

@@ -41,14 +41,12 @@ public class SSHCommandExecutor {
     public int execute(final String command) {
         int returnCode = 0;
         JSch jsch = new JSch();
-        MyUserInfo userInfo = new MyUserInfo();
 
         try {
             // Create and connect session.
             Session session = jsch.getSession(username, ipAddress, DEFAULT_SSH_PORT);
             session.setConfig( "StrictHostKeyChecking" , "no" ); // 不验证host-key，验证会失败。
             session.setPassword(password);
-//            session.setUserInfo(userInfo);
             session.connect();
 
             // Create and connect channel.
@@ -85,9 +83,4 @@ public class SSHCommandExecutor {
         }
         return returnCode;
     }
-
-    public Vector<String> getStandardOutput() {
-        return stdout;
-    }
-
 }
