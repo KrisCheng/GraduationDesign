@@ -87,8 +87,8 @@ public class CTS_SS {
     //生成Sine初值
     public void initSineMap() {
         initList = new double[Dim][initNumber];
-        //1.进入到exp目录下
-        sshExecutor.execute("cd GFDL-CM2.1p1/exp/;bsub fr21.csh");
+        //1.进入到exp目录下并执行命令
+//      sshExecutor.execute("cd GFDL-CM2.1p1/exp/;bsub fr21.csh");
 
         for (int i = 0; i < initNumber; i++) {
             for (int j = 0; j < Dim; j++) {
@@ -97,6 +97,14 @@ public class CTS_SS {
             Matrix initSineMatrix = new Matrix(initList);
             //获得initNumber个初始解
             Matrix initMatrix = tempTransMatrix.times(initSineMatrix);
+            //获取一个初始值作为输入扰动
+            double[][] temp = new double[xAxis][yAxis];
+            for(int m = 0; m < yAxis; m++){
+                for(int n = 0; n < xAxis; n++){
+                    temp[n][m] = initMatrix.get((m*n+n),0);
+                }
+            }
+
 
             //调用Shell,写入需要执行的命令
             //todo:调用shell模式求解,在满足约束的条件(即禁忌判断参数)下,与适应度函数做对比,得到最优初始解
