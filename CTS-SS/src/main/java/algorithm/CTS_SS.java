@@ -2,13 +2,9 @@ package algorithm;
 
 import Jama.Matrix;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import shh.connect.SSHCommandExecutor;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.Random;
 
 /**
@@ -20,9 +16,9 @@ public class CTS_SS {
     //初始参数配置
     private final int xAxis = 360;
     private final int yAxis = 200;
-    private final int Dim = 10; //特征空间维度(主成分数目)
+    private final int Dim = 20; //特征空间维度(主成分数目)
     private final int tabuLength = 10; //禁忌长度
-    private final int initNumber = 10; //初始候选解数目
+    private final int initNumber = 1; //初始候选解数目
     private int m1; //阶段一候选解个数
     private int m2; //阶段一候选解个数
     private int R1; //阶段1邻域半径
@@ -43,6 +39,7 @@ public class CTS_SS {
     Random random = new Random(); //生成随机数
     private int curCycle; //当前迭代次数
     Matrix tempTransMatrix; //降维后矩阵
+
     SSHCommandExecutor sshExecutor = new SSHCommandExecutor("10.68.0.1", "nscc1735_LX", "N20163941");//SSH连接并调用Shell
 
     public CTS_SS(int s1, int r1, int cycle1, int s2, int r2, int cycle2, double para) {
@@ -87,25 +84,42 @@ public class CTS_SS {
     //生成Sine初值
     public void initSineMap() {
         initList = new double[Dim][initNumber];
-        //1.进入到exp目录下并执行命令
-//      sshExecutor.execute("cd GFDL-CM2.1p1/exp/;bsub fr21.csh");
+        //TODO 1.进入到exp目录下并执行命令
+        //sshExecutor.execute("cd GFDL-CM2.1p1/exp/;bsub fr21.csh");
 
-        for (int i = 0; i < initNumber; i++) {
-            for (int j = 0; j < Dim; j++) {
+        for (int i = 0; i < Dim; i++) {
+            for (int j = 0; j < initNumber; j++) {
                 initList[i][j] = Math.sin(Math.PI * Math.random());//通过sin函数获取初始解
+                System.out.println(initList[i][j]);
             }
             Matrix initSineMatrix = new Matrix(initList);
             //获得initNumber个初始解
             Matrix initMatrix = tempTransMatrix.times(initSineMatrix);
-            //获取一个初始值作为输入扰动
-            double[][] temp = new double[xAxis][yAxis];
-            for(int m = 0; m < yAxis; m++){
-                for(int n = 0; n < xAxis; n++){
-                    temp[n][m] = initMatrix.get((m*n+n),0);
+
+            try {
+                File file = new File("temp.txt");
+                PrintStream ps = new PrintStream(new FileOutputStream(file));
+                double[][] temp = new double[xAxis][yAxis];
+                for(int m = 0; m < yAxis; m++) {
+                    for (int n = 0; n < xAxis; n++) {
+                        temp[n][m] = initMatrix.get((m * n + n), 0);
+                        ps.print(temp[n][m]+" ");
+                    }
+                    ps.println();
                 }
+                ps.close();
+            } catch (FileNotFoundException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
             }
 
-
+        //获取一个初始值作为输入扰动并将结果输出
+//            double[][] temp = new double[xAxis][yAxis];
+//            for(int m = 0; m < yAxis; m++) {
+//                for (int n = 0; n < xAxis; n++) {
+//                    temp[n][m] = initMatrix.get((m * n + n), 0);
+//                }
+//            }
             //调用Shell,写入需要执行的命令
             //todo:调用shell模式求解,在满足约束的条件(即禁忌判断参数)下,与适应度函数做对比,得到最优初始解
         }
@@ -189,7 +203,7 @@ public class CTS_SS {
 
     public static void main(String[] args) throws IOException {
         CTS_SS cts_ss = new CTS_SS(80, 10, 10, 40, 20, 10, 0.01);
-        String filename = "src/main/java/algorithm/sst_10.xlsx";
+        String filename = "src/main/java/algorithm/sst_20.xlsx";
         cts_ss.init(filename);
         cts_ss.solution();
     }
