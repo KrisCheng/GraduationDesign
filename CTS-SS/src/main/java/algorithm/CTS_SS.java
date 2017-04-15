@@ -2,8 +2,6 @@ package algorithm;
 
 import Jama.Matrix;
 import org.apache.poi.ss.usermodel.*;
-import shh.connect.SSHCommandExecutor;
-
 import java.io.*;
 import java.util.Random;
 
@@ -40,8 +38,6 @@ public class CTS_SS {
     private int curCycle; //当前迭代次数
     Matrix tempTransMatrix; //降维后矩阵
 
-    SSHCommandExecutor sshExecutor = new SSHCommandExecutor("10.68.0.1", "nscc1735_LX", "N20163941");//SSH连接并调用Shell
-
     public CTS_SS(int s1, int r1, int cycle1, int s2, int r2, int cycle2, double para) {
         m1 = s1;
         R1 = r1;
@@ -58,7 +54,7 @@ public class CTS_SS {
      * @param filename 数据文件名,存储所有的主成分维度坐标
      * @throws IOException
      */
-    private void init(String filename) throws IOException {
+    public void init(String filename) throws IOException {
         try {
             double[][] tempTransList = new double[xAxis * yAxis][Dim];
             File excelFile = new File(filename); //创建文件对象
@@ -84,9 +80,6 @@ public class CTS_SS {
     //生成Sine初值
     public void initSineMap() {
         initList = new double[Dim][initNumber];
-        //TODO 1.进入到exp目录下并执行命令
-        //sshExecutor.execute("cd GFDL-CM2.1p1/exp/;bsub fr21.csh");
-
         for (int i = 0; i < Dim; i++) {
             for (int j = 0; j < initNumber; j++) {
                 initList[i][j] = Math.sin(Math.PI * Math.random());//通过sin函数获取初始解
@@ -181,30 +174,24 @@ public class CTS_SS {
         localValue = new double[Dim];
         initSineMap();
         //2.分阶段搜索
-//        for (curCycle = 1; curCycle <= MAX_CYCLE1; curCycle++) {
-//            for (int i = 0; i < m1; i++) {
-//                swap(R1, tempValue);
-//                if (isTabuList(tempValue)) {
-//                    addtoTabuList(tempValue);
-//                }
-//            }
-//        }
-//        for (curCycle = 1; curCycle <= MAX_CYCLE2; curCycle++) {
-//            for (int i = 0; i < m2; i++) {
-//                swap(R2, tempValue);
-//                if (isTabuList(tempValue)) {
-//                    addtoTabuList(tempValue);
-//                }
-//            }
-//        }
+        for (curCycle = 1; curCycle <= MAX_CYCLE1; curCycle++) {
+            for (int i = 0; i < m1; i++) {
+                swap(R1, tempValue);
+                if (isTabuList(tempValue)) {
+                    addtoTabuList(tempValue);
+                }
+            }
+        }
+        for (curCycle = 1; curCycle <= MAX_CYCLE2; curCycle++) {
+            for (int i = 0; i < m2; i++) {
+                swap(R2, tempValue);
+                if (isTabuList(tempValue)) {
+                    addtoTabuList(tempValue);
+                }
+            }
+        }
         //3.打印结果
 
     }
 
-    public static void main(String[] args) throws IOException {
-        CTS_SS cts_ss = new CTS_SS(80, 10, 10, 40, 20, 10, 0.01);
-        String filename = "src/main/java/algorithm/sst_20.xlsx";
-        cts_ss.init(filename);
-        cts_ss.solution();
-    }
 }
