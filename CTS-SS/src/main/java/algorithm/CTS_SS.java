@@ -162,7 +162,7 @@ public class CTS_SS {
         //不断请求,判断模式是否完成
         while(true){
             String dir = FileHelper.exec("bjobs");
-            if(null == dir){
+            if("" == dir){
                 break;
             }
         }
