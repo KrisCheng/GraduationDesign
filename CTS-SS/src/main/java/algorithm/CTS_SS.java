@@ -109,31 +109,24 @@ public class CTS_SS {
     public Matrix initSineMap() {
         initList = new double[Dim][initNumber];
         Matrix initMatrix = new Matrix(xAxis*yAxis,Dim);
-        for (int i = 0; i < Dim; i++) {
-            for (int j = 0; j < initNumber; j++) {
-                initList[i][j] = Math.sin(Math.PI * Math.random());//通过sin函数获取初始解
-                System.out.println(initList[i][j]);
-            }
-            Matrix initSineMatrix = new Matrix(initList);
-            //获得initNumber个初始解,全部保存在initMatrix中
-            initMatrix = tempTransMatrix.times(initSineMatrix);
-            //记录初始解
+        //通过sin函数获取初始解并保存在单独文件中
+        for (int i = 0; i < initNumber; i++) {
             try {
-                File file = new File("temp.txt");
+                File file = new File(FILE_PATH.RESOURCE_PATH+ "PCA" + i + ".txt");
                 PrintStream ps = new PrintStream(new FileOutputStream(file));
-                double[][] temp = new double[xAxis][yAxis];
-                for (int m = 0; m < yAxis; m++) {
-                    for (int n = 0; n < xAxis; n++) {
-                        temp[n][m] = initMatrix.get((m * n + n), 0);
-                        ps.print(temp[n][m] + " ");
-                    }
-                    ps.println();
+                for (int j = 0; j < Dim; j++) {
+                    initList[j][i] = Math.sin(Math.PI * Math.random());//通过sin函数获取初始解
+                    ps.println(initList[j][i]);
+                    ps.close();
                 }
-                ps.close();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
         }
+            Matrix initSineMatrix = new Matrix(initList);
+            //获得initNumber个初始解,全部保存在initMatrix中
+            initMatrix = tempTransMatrix.times(initSineMatrix);
+            //记录初始解
         //todo:调用shell模式求解,在满足约束的条件(即禁忌判断参数)下,与适应度函数做对比,得到最优初始解(GFDL模式运行时间过长,暂时取第0个)
         //获取一个初始值作为输入扰动并将结果输出
             double[][] temp = new double[xAxis][yAxis];
@@ -148,14 +141,17 @@ public class CTS_SS {
             initValue[t][0] = initList[t][0];
             bestValue[t][0] = initList[t][0];
         }
+        System.out.println("PCA and Initialization finished. go to run the GFDL.");
         return new Matrix(temp);
     }
 
 
-    //执行GFDL模式并获取CNOP值
-    public void evaluate(Matrix temp) {
+    //执行GFDL模式并获取CNOP值,运行第i个文件,temp表示该文件对应的初始扰动矩阵
+    public void evaluate(int i, Matrix temp) {
         //数据准备,将扰动加入INPUT文件中
-        FileHelper.prepareFile(1, temp);
+        FileHelper.deleteFile(FILE_PATH.RESOURCE_PATH +"PCA"+ i + ".txt");
+        FileHelper.prepareFile(i, temp);
+        FileHelper.copyFile(FILE_PATH.RESOURCE_PATH + "/ocean_temp_salt_" + i + ".nc", FILE_PATH.INPUT_PATH + "/ocean_temp_salt.res.nc", true);
         //调脚本
         FileHelper.exec("bsub ./fr21.csh");
         while(true){
@@ -174,7 +170,7 @@ public class CTS_SS {
         FileHelper.deleteFile(FILE_PATH.OUTPUT_PATH + "diag_table");
         FileHelper.deleteFile(FILE_PATH.OUTPUT_PATH + "field_table");
         FileHelper.deleteFile(FILE_PATH.OUTPUT_PATH + "input.nml");
-
+        System.out.println("模式运行完成,接下来进行寻优步骤");
         if(tempEvaluation > bestEvaluation){
             //todo 禁忌和禁忌表
         }
@@ -202,7 +198,6 @@ public class CTS_SS {
                         adapt += Math.pow(tem[j][k], 2);
                     }
                 }
-
                 return adapt;
 
             } catch (Exception e){
@@ -265,7 +260,7 @@ public class CTS_SS {
         }
     }
 
-    //主成分与矩阵的转换方法
+    //主成分与目标矩阵的转换方法
     public Matrix convert(double[][] temp){
         Matrix tempVector =  new Matrix(temp);
         Matrix finalVector = tempTransMatrix.times(tempVector);
@@ -292,14 +287,14 @@ public class CTS_SS {
             for (int i = 0; i < m1; i++) {
                 tempValue = swap(R1, tempValue);
                 tempSolution = convert(tempValue);
-                evaluate(tempSolution);
+                evaluate(i,tempSolution);
             }
         }
         for (curCycle = 1; curCycle <= MAX_CYCLE2; curCycle++) {
             for (int i = 0; i < m2; i++) {
                 tempValue = swap(R2, tempValue);
                 tempSolution = convert(tempValue);
-                evaluate(tempSolution);
+                evaluate(i,tempSolution);
             }
         }
         //3.打印结果
