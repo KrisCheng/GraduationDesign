@@ -33,7 +33,7 @@ public class CTS_SS {
     private int MAX_CYCLE2; //阶段二迭代次数
     private double tabuParameter; //禁忌判定参数
 
-    private double[][] tabuList = new double[Dim][tabuLength]; //禁忌表
+    private double[] tabuList = new double[tabuLength]; //禁忌表
     private double[][] initList; //候选初始解列表
     private double[][] initValue = new double[Dim][1]; //初始解
     private double initEvaluation; //初始解扰动值
@@ -46,6 +46,10 @@ public class CTS_SS {
     Random random = new Random(); //生成随机数
     private int curCycle; //当前迭代次数
     Matrix tempTransMatrix; //降维后矩阵
+
+    Matrix tempSolution = initSineMap();
+    Matrix localSolution = initSineMap();
+    Matrix bestSolution = initSineMap();
 
     public CTS_SS(int s1, int r1, int cycle1, int s2, int r2, int cycle2, double para) {
         m1 = s1;
@@ -108,7 +112,6 @@ public class CTS_SS {
     //生成Sine初值并记录
     public Matrix initSineMap() {
         initList = new double[Dim][initNumber];
-        Matrix initMatrix = new Matrix(xAxis*yAxis,Dim);
         //通过sin函数获取初始解并保存在单独文件中
         for (int i = 0; i < initNumber; i++) {
             try {
@@ -125,7 +128,7 @@ public class CTS_SS {
         }
             Matrix initSineMatrix = new Matrix(initList);
             //获得initNumber个初始解,全部保存在initMatrix中
-            initMatrix = tempTransMatrix.times(initSineMatrix);
+            Matrix initMatrix = tempTransMatrix.times(initSineMatrix);
             //记录初始解
         //todo:调用shell模式求解,在满足约束的条件(即禁忌判断参数)下,与适应度函数做对比,得到最优初始解(GFDL模式运行时间过长,暂时取第0个)
         //获取一个初始值作为输入扰动并将结果输出
@@ -141,6 +144,8 @@ public class CTS_SS {
             initValue[t][0] = initList[t][0];
             bestValue[t][0] = initList[t][0];
         }
+        initEvaluation = adaptValue();
+
         System.out.println("PCA and Initialization finished. go to run the GFDL.");
         return new Matrix(temp);
     }
@@ -154,14 +159,14 @@ public class CTS_SS {
         FileHelper.copyFile(FILE_PATH.RESOURCE_PATH + "/ocean_temp_salt_" + i + ".nc", FILE_PATH.INPUT_PATH + "/ocean_temp_salt.res.nc", true);
         //调脚本
         FileHelper.exec("bsub ./fr21.csh");
+        //不断请求,判断模式是否完成
         while(true){
-            String tem = FileHelper.exec("bjobs");
-            if(tem.contains("No")){
+            String dir = FileHelper.exec("bjobs");
+            if(null == dir){
                 break;
             }
         }
         tempEvaluation = adaptValue();
-
         //下次运行前需要删除的文件
         FileHelper.deleteDirectory(FILE_PATH.OUTPUT_PATH + "ascii");
         FileHelper.deleteDirectory(FILE_PATH.OUTPUT_PATH + "history");
@@ -170,16 +175,19 @@ public class CTS_SS {
         FileHelper.deleteFile(FILE_PATH.OUTPUT_PATH + "diag_table");
         FileHelper.deleteFile(FILE_PATH.OUTPUT_PATH + "field_table");
         FileHelper.deleteFile(FILE_PATH.OUTPUT_PATH + "input.nml");
-        System.out.println("模式运行完成,接下来进行寻优步骤");
-        if(tempEvaluation > bestEvaluation){
-            //todo 禁忌和禁忌表
+        System.out.println("模式运行完成,接下来进行寻优步骤.");
+        if(!inTabuList(tempEvaluation)) {
+            if (tempEvaluation > localEvaluation) {
+                localEvaluation = tempEvaluation;
+                localSolution = temp;
+                addtoTabuList(localEvaluation);
+            }
         }
     }
 
 
     //适应度函数
     public double adaptValue(){
-
         NetcdfFile ncfile = null;
         try {
             ncfile = NetcdfFile.open(FILE_PATH.HISTORY_PATH + "00510301.ocean_month.nc");
@@ -207,9 +215,7 @@ public class CTS_SS {
         } catch (IOException ioe) {
             return -1;
         }
-
         return -1;
-
     }
 
     //领域交换
@@ -236,11 +242,10 @@ public class CTS_SS {
         return tempChr;
     }
 
-    //TODO 判断某个解是否在禁忌表中
-    public boolean isTabuList(double[] tempChr) {
+    // 判断某个解是否在禁忌表中
+    public boolean inTabuList(double adaptValue) {
         for (int i = 0; i < tabuLength; i++) {
-            //todo:tempChr与tabuList中元素进行对比
-            if (true) {
+            if (Math.abs(tabuList[i]-adaptValue)<tabuParameter) {
                 return true;
             }
         }
@@ -248,16 +253,12 @@ public class CTS_SS {
     }
 
     //TODO 解除禁忌与加入禁忌表
-    public void addtoTabuList(double[] tempChr) {
+    public void addtoTabuList(double tempChr) {
         for (int i = 0; i < tabuLength - 1; i++) {
-            for (int j = 0; j < Dim; j++) {
-                tabuList[i][j] = tabuList[i + 1][j];
-            }
+                tabuList[i] = tabuList[i + 1];
         }
         //将新的最优解加入禁忌表
-        for (int k = 0; k < Dim; k++) {
-            tabuList[tabuLength - 1][k] = tempChr[k];
-        }
+        tabuList[tabuLength - 1] = tempChr;
     }
 
     //主成分与目标矩阵的转换方法
@@ -273,32 +274,39 @@ public class CTS_SS {
         return new Matrix(tempList);
     }
 
+    //判断本次迭代有没有获得更优解
+    public void isBest(double localEvaluation,double bestEvaluation){
+        if (localEvaluation-bestEvaluation>tabuParameter) {//获得更优解
+            bestEvaluation = localEvaluation;
+            bestSolution = tempSolution;
+        }
+    }
+
     //初始并分阶段搜索
     public void solution() {
         //1.初始化
         bestValue = new double[Dim][1];
         tempValue = new double[Dim][1];
         localValue = new double[Dim][1];
-        Matrix tempSolution = initSineMap();
-        Matrix bestSolution = initSineMap();
 
         //2.分阶段搜索
         for (curCycle = 1; curCycle <= MAX_CYCLE1; curCycle++) {
             for (int i = 0; i < m1; i++) {
-                tempValue = swap(R1, tempValue);
-                tempSolution = convert(tempValue);
-                evaluate(i,tempSolution);
+                localValue = swap(R1, localValue);
+                localSolution = convert(localValue);
+                evaluate(i,localSolution);
             }
+            isBest(localEvaluation,bestEvaluation);
         }
         for (curCycle = 1; curCycle <= MAX_CYCLE2; curCycle++) {
             for (int i = 0; i < m2; i++) {
-                tempValue = swap(R2, tempValue);
-                tempSolution = convert(tempValue);
-                evaluate(i,tempSolution);
+                localValue = swap(R2, localValue);
+                localSolution = convert(localValue);
+                evaluate(i,localSolution);
             }
+            isBest(localEvaluation,bestEvaluation);
         }
         //3.打印结果
-
     }
 
 }
