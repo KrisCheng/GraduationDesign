@@ -3,13 +3,13 @@ package algorithm;
 import Jama.Matrix;
 import org.apache.poi.ss.usermodel.*;
 import tool.FileHelper;
+import tool.ShellHelper;
 import ucar.ma2.Array;
 import ucar.ma2.Index;
 import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
 
 import java.io.*;
-import java.util.List;
 import java.util.Random;
 
 /**
@@ -47,9 +47,9 @@ public class CTS_SS {
     private int curCycle; //当前迭代次数
     Matrix tempTransMatrix; //降维后矩阵
 
-    Matrix tempSolution = initSineMap();
-    Matrix localSolution = initSineMap();
-    Matrix bestSolution = initSineMap();
+    Matrix tempSolution;
+    Matrix localSolution;
+    Matrix bestSolution;
 
     public CTS_SS(int s1, int r1, int cycle1, int s2, int r2, int cycle2, double para) {
         m1 = s1;
@@ -84,7 +84,8 @@ public class CTS_SS {
                     tempTransList[r][c] = cell.getNumericCellValue();
                 }
             }
-            tempTransMatrix = new Matrix(tempTransList);//降维后矩阵
+            tempTransMatrix = new Matrix(tempTransList);//降维后大矩阵
+            System.out.println("PCA finished. go to initialization.");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -145,8 +146,9 @@ public class CTS_SS {
             bestValue[t][0] = initList[t][0];
         }
         initEvaluation = adaptValue();
+        bestEvaluation = initEvaluation;
 
-        System.out.println("PCA and Initialization finished. go to run the GFDL.");
+        System.out.println("Initialization finished. go to run the GFDL.");
         return new Matrix(temp);
     }
 
@@ -157,13 +159,22 @@ public class CTS_SS {
         FileHelper.deleteFile(FILE_PATH.RESOURCE_PATH +"PCA"+ i + ".txt");
         FileHelper.prepareFile(i, temp);
         FileHelper.copyFile(FILE_PATH.RESOURCE_PATH + "/ocean_temp_salt_" + i + ".nc", FILE_PATH.INPUT_PATH + "/ocean_temp_salt.res.nc", true);
+
         //调脚本
         FileHelper.exec("bsub ./fr21.csh");
-        //不断请求,判断模式是否完成
+        //轮询(5分钟一次),判断模式是否完成
         while(true){
-            String dir = FileHelper.exec("bjobs");
-            if("" == dir){
-                break;
+            try{
+                Thread.sleep(1000 * 60 * 5);
+                String tem = ShellHelper.exec("bjobs");
+                if(tem.equals("")){
+                    System.out.println("GFDL run finished!");
+                    break;
+                } else {
+                    System.out.println("Not Yet!");
+                }
+            } catch (Exception e){
+                e.printStackTrace();
             }
         }
         tempEvaluation = adaptValue();
@@ -175,7 +186,10 @@ public class CTS_SS {
         FileHelper.deleteFile(FILE_PATH.OUTPUT_PATH + "diag_table");
         FileHelper.deleteFile(FILE_PATH.OUTPUT_PATH + "field_table");
         FileHelper.deleteFile(FILE_PATH.OUTPUT_PATH + "input.nml");
-        System.out.println("模式运行完成,接下来进行寻优步骤.");
+        FileHelper.deleteFile(FILE_PATH.EXP_PATH + "CM2.1p1.output.tar.gz");
+        FileHelper.deleteFile(FILE_PATH.EXP_PATH + "fms.out");
+        System.out.println("The model finished, next step is find the best solution.");
+
         if(!inTabuList(tempEvaluation)) {
             if (tempEvaluation > localEvaluation) {
                 localEvaluation = tempEvaluation;
@@ -184,7 +198,6 @@ public class CTS_SS {
             }
         }
     }
-
 
     //适应度函数
     public double adaptValue(){
@@ -274,7 +287,7 @@ public class CTS_SS {
         return new Matrix(tempList);
     }
 
-    //判断本次迭代有没有获得更优解
+    //判断本次迭代有没有获得更优解,如有,替换
     public void isBest(double localEvaluation,double bestEvaluation){
         if (localEvaluation-bestEvaluation>tabuParameter) {//获得更优解
             bestEvaluation = localEvaluation;
@@ -288,6 +301,7 @@ public class CTS_SS {
         bestValue = new double[Dim][1];
         tempValue = new double[Dim][1];
         localValue = new double[Dim][1];
+        bestSolution = initSineMap();
 
         //2.分阶段搜索
         for (curCycle = 1; curCycle <= MAX_CYCLE1; curCycle++) {
@@ -307,6 +321,8 @@ public class CTS_SS {
             isBest(localEvaluation,bestEvaluation);
         }
         //3.打印结果
+        System.out.println("the program finished.");
+        System.out.println("the best result is " + bestEvaluation);
     }
 
 }

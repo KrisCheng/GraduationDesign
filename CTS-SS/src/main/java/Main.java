@@ -1,4 +1,5 @@
 import algorithm.CTS_SS;
+import algorithm.FILE_PATH;
 
 import java.io.IOException;
 
@@ -7,10 +8,9 @@ import java.io.IOException;
  * All right reserved.
  */
 public class Main {
-
     public static void main(String[] args) throws IOException {
-        CTS_SS cts_ss = new CTS_SS(80, 10, 10, 40, 20, 10, 0.01);
-        String filename = "src/main/java/data/sst_20.xlsx";
+        CTS_SS cts_ss = new CTS_SS(5, 10, 10, 10, 5, 10, 0.01);
+        String filename = FILE_PATH.DATA_PATH+"/sst_20.xlsx";
         cts_ss.init(filename);
         cts_ss.solution();
     }
