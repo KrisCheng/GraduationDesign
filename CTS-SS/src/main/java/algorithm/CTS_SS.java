@@ -317,7 +317,7 @@ public class CTS_SS {
         //2.分阶段搜索
         for (curCycle = 1; curCycle <= MAX_CYCLE1; curCycle++) {
             for (int i = 0; i < m1; i++) {
-                tempValue = swap(R1, localValue);
+                tempValue = swap(R1, tempValue);
                 tempSolution = convert(tempValue);
                 evaluate(tempSolution);
             }
@@ -331,7 +331,7 @@ public class CTS_SS {
             }
             isBest(localEvaluation, bestEvaluation);
         }
-        
+
         //3.打印结果
         System.out.println("---------------------------");
         System.out.println("the program finished.");
