@@ -25,13 +25,12 @@ public class FileHelper {
 
     /**
      * 将原文件拷贝成新文件，并将矩阵写回新文件
-     * @param order
      * @param swarm
      * @return
      */
-    public static String prepareFile(int order, Matrix swarm){
+    public static String prepareFile(Matrix swarm){
         try{
-            String orderFileName = FILE_PATH.RESOURCE_PATH + order + "/ocean_temp_salt_" + order + ".nc";
+            String orderFileName = FILE_PATH.RESOURCE_PATH + "/ocean_temp_salt" + ".nc";
             copyFile(fileName, orderFileName, true);
             NetcdfFileWriteable ncfile = NetcdfFileWriteable.openExisting(orderFileName);
             Dimension xaxis = ncfile.getDimensions().get(0);
