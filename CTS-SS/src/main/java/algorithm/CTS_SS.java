@@ -25,6 +25,7 @@ public class CTS_SS {
 
     private final int tabuLength = 10; //禁忌长度
     private final int initNumber = 1; //初始候选解数目
+
     private int m1; //阶段一候选解个数
     private int m2; //阶段一候选解个数
     private int R1; //阶段1邻域半径
