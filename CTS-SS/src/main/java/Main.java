@@ -9,8 +9,8 @@ import java.io.IOException;
  */
 public class Main {
     public static void main(String[] args) throws IOException {
-        CTS_SS cts_ss = new CTS_SS(5, 10, 10, 10, 5, 10, 0.01);
-        String filename = FILE_PATH.DATA_PATH+"/sst_20.xlsx";
+        CTS_SS cts_ss = new CTS_SS(1, 10, 2, 2, 5, 1, 0.1);
+        String filename = FILE_PATH.DATA_PATH+"sst_20.xlsx";
         cts_ss.init(filename);
         cts_ss.solution();
     }

@@ -38,15 +38,15 @@ public class CTS_SS {
     private double[] tabuList = new double[tabuLength]; //禁忌表
     private double[][] initList; //候选初始解列表
 
-    private double[][] bestValue; //当前最优解
+    private double[][] bestValue = new double[Dim][1]; //当前最优解
     private double bestEvaluation = 0; //最优解扰动值
     Matrix bestSolution;
 
-    private double[][] tempValue; //临时解
+    private double[][] tempValue= new double[Dim][1]; //临时解
     private double tempEvaluation = 0; //临时解扰动值
     Matrix tempSolution;
 
-    private double[][] localValue; //局部解
+    private double[][] localValue = new double[Dim][1]; //局部解
     private double localEvaluation = 0; //局部解扰动值
     Matrix localSolution;
 
@@ -118,17 +118,18 @@ public class CTS_SS {
         initList = new double[Dim][initNumber];
         //通过sin函数获取初始解并保存在单独文件中
         for (int i = 0; i < initNumber; i++) {
-            try {
-                File file = new File(FILE_PATH.PCA_PATH + "PCA" + i + ".txt");
-                PrintStream ps = new PrintStream(new FileOutputStream(file));
+//            try {
+//                File file = new File(FILE_PATH.PCA_PATH + "PCA" + i + ".txt");
+//                PrintStream ps = new PrintStream(new FileOutputStream(file));
                 for (int j = 0; j < Dim; j++) {
                     initList[j][i] = Math.sin(Math.PI * Math.random());//通过sin函数获取初始解
-                    ps.println(initList[j][i]);
-                    ps.close();
+//                    ps.println(initList[j][i]);
+//                    ps.close();
                 }
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
+//            }
+//            catch (FileNotFoundException e) {
+//                e.printStackTrace();
+//            }
         }
         Matrix initSineMatrix = new Matrix(initList);
         //获得initNumber个初始解,全部保存在initMatrix中
@@ -146,9 +147,11 @@ public class CTS_SS {
         //存储初始解,即为最优解
         for (int t = 0; t < Dim; t++) {
             bestValue[t][0] = initList[t][0];
+            tempValue[t][0] = bestValue[t][0];
         }
 //        bestEvaluation = adaptValue();//暂时未运行模式,注释
-        bestSolution = new Matrix(bestValue);
+        bestSolution = convert(bestValue);
+        tempSolution = bestSolution;
 
         System.out.println("---------------------------");
 //        System.out.println("the initialize CNOP is " + bestEvaluation); //暂时未运行模式,注释
@@ -167,7 +170,7 @@ public class CTS_SS {
     public void evaluate(Matrix temp) {
         //数据准备,将扰动加入INPUT文件中
         FileHelper.prepareFile(temp);
-        FileHelper.copyFile(FILE_PATH.PCA_PATH + "/ocean_temp_salt.nc", FILE_PATH.INPUT_PATH + "/ocean_temp_salt.res.nc", true);
+        FileHelper.copyFile(FILE_PATH.RESOURCE_PATH + "/ocean_temp_salt.nc", FILE_PATH.INPUT_PATH + "/ocean_temp_salt.res.nc", true);
 
         //调shell
         FileHelper.exec("bsub ./fr21.csh");
@@ -251,7 +254,7 @@ public class CTS_SS {
             temp[k][0] = tempChr[k][0];
         }
         for (int i = 0; i < radius; i++) {
-            int rand = random.nextInt() % Dim;
+            int rand = random.nextInt(65535) % Dim;
             tempChr[rand][0] = Math.sin(Math.PI * Math.random());
         }
         return temp;
@@ -284,7 +287,7 @@ public class CTS_SS {
         double[][] tempList = new double[xAxis][yAxis];
         for(int m = 0; m < yAxis; m++) {
             for (int n = 0; n < xAxis; n++) {
-                temp[n][m] = finalVector.get((m * n + n), 0);
+                tempList[n][m] = finalVector.get((m * n + n), 0);
             }
         }
         return new Matrix(tempList);
