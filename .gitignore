@@ -16,3 +16,7 @@ data/20PC(1)_mat.txt
 data/sst_80.xlsx
 data/PCA/20PC(1)
 data/PCA/20PC(1)_mat.txt
+CTS-SS/build/classes/main/Main.class
+CTS-SS/build/classes/main/algorithm/FILE_PATH.class
+CTS-SS/build/classes/main/tool/FileHelper.class
+CTS-SS/build/classes/main/tool/ShellHelper.class
