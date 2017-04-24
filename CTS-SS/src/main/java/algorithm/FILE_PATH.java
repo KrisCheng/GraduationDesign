@@ -12,5 +12,5 @@ public class FILE_PATH {
     public static final String HISTORY_PATH = OUTPUT_PATH + "history/";
     public static final String RESOURCE_PATH = ROOT_PATH + "record/";
     public static final String DATA_PATH = RESOURCE_PATH + "data/";
-    public static final String PCA_PATH = ROOT_PATH + "pca/";
+    public static final String RESULT_PATH = RESOURCE_PATH + "result/";
 }

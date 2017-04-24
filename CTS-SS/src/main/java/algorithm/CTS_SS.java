@@ -167,23 +167,23 @@ public class CTS_SS {
 
 
     //执行GFDL模式并获取CNOP值,运行第i个文件,temp表示该文件对应的初始扰动矩阵
-    public void evaluate(Matrix temp) {
+    public void evaluate(Matrix temp, int i) {
         //数据准备,将扰动加入INPUT文件中
         FileHelper.prepareFile(temp);
         FileHelper.copyFile(FILE_PATH.RESOURCE_PATH + "/ocean_temp_salt.nc", FILE_PATH.INPUT_PATH + "/ocean_temp_salt.res.nc", true);
 
         //调shell
         FileHelper.exec("bsub ./fr21.csh");
-        //轮询(5分钟一次),判断模式是否完成
+        //轮询(10分钟一次),判断模式是否完成
         while (true) {
             try {
-                Thread.sleep(1000 * 60 * 5);
+                Thread.sleep(1000 * 60 * 10);
                 String tem = ShellHelper.exec("bjobs");
                 if (tem.equals("")) {
                     System.out.println("GFDL run finished!");
                     break;
                 } else {
-                    System.out.println("This cycle not finished!");
+                    System.out.println("This cycle not finished! Waiting...");
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -199,6 +199,8 @@ public class CTS_SS {
         FileHelper.deleteFile(FILE_PATH.OUTPUT_PATH + "diag_table");
         FileHelper.deleteFile(FILE_PATH.OUTPUT_PATH + "field_table");
         FileHelper.deleteFile(FILE_PATH.OUTPUT_PATH + "input.nml");
+        //保存输出文件
+        FileHelper.copyFile(FILE_PATH.EXP_PATH + "CM2.1p1.output.tar.gz", FILE_PATH.RESULT_PATH + "CM2.1p1.output.tar"+i+".gz", true);
         FileHelper.deleteFile(FILE_PATH.EXP_PATH + "CM2.1p1.output.tar.gz");
         FileHelper.deleteFile(FILE_PATH.EXP_PATH + "fms.out");
         System.out.println("The model finished, next step is find the best solution.");
@@ -225,14 +227,14 @@ public class CTS_SS {
             //计算（sst-sst'）平方求和 该值即为适应度值
             try {
                 Variable sst = ncfile.findVariable("sst");
-                Array part = sst.read("5:5:1, 0:199:1, 0:359:1");
+                Array part = sst.read("5:5:1, 62:129:1, 0:219:1");
                 Index index = part.reduce().getIndex();
                 double[][] tem = new double[200][360];
                 double adapt = 0;
-                for (int j = 0; j < 200; j++) {
-                    for (int k = 0; k < 360; k++) {
-                        tem[j][k] = part.reduce().getDouble(index.set(j, k)) - outputMatrix.get(j, k);
-                        adapt += Math.pow(tem[j][k], 2);
+                for (int j = 62; j < 130; j++) {
+                    for (int k = 0; k < 220; k++) {
+                        tem[j-62][k] = part.reduce().getDouble(index.set(j-62, k)) - outputMatrix.get(j, k);
+                        adapt += Math.pow(tem[j-62][k], 2);
                     }
                 }
                 return adapt;
@@ -317,13 +319,14 @@ public class CTS_SS {
     public void solution() {
         //1.初始化
         bestSolution = initSineMap();
-
+        int times = 1;//第几次运行模式
         //2.分阶段搜索
         for (curCycle = 1; curCycle <= MAX_CYCLE1; curCycle++) {
             for (int i = 0; i < m1; i++) {
                 tempValue = swap(R1, tempValue);
                 tempSolution = convert(tempValue);
-                evaluate(tempSolution);
+                evaluate(tempSolution,times);
+                times++;
             }
             isBest(localEvaluation, bestEvaluation);
         }
@@ -331,7 +334,8 @@ public class CTS_SS {
             for (int i = 0; i < m2; i++) {
                 tempValue = swap(R2, tempValue);
                 tempSolution = convert(tempValue);
-                evaluate(tempSolution);
+                evaluate(tempSolution,times);
+                times++;
             }
             isBest(localEvaluation, bestEvaluation);
         }
@@ -339,6 +343,7 @@ public class CTS_SS {
         //3.打印结果
         System.out.println("---------------------------");
         System.out.println("the program finished.");
+        System.out.println("the model run "+times+ " times.");
         System.out.println("the best CNOP is " + bestEvaluation);
         System.out.println("the best result is:");
         for (int i = 0; i < Dim; i++) {
