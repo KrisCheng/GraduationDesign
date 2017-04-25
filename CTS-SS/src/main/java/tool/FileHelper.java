@@ -324,4 +324,18 @@ public class FileHelper {
         }
     }
 
+    public static void clear(int i){
+        FileHelper.deleteDirectory(FILE_PATH.OUTPUT_PATH + "ascii");
+        FileHelper.deleteDirectory(FILE_PATH.OUTPUT_PATH + "history");
+        FileHelper.deleteDirectory(FILE_PATH.OUTPUT_PATH + "RESTART");
+        FileHelper.deleteFile(FILE_PATH.OUTPUT_PATH + "data_table");
+        FileHelper.deleteFile(FILE_PATH.OUTPUT_PATH + "diag_table");
+        FileHelper.deleteFile(FILE_PATH.OUTPUT_PATH + "field_table");
+        FileHelper.deleteFile(FILE_PATH.OUTPUT_PATH + "input.nml");
+        //保存输出文件
+        FileHelper.copyFile(FILE_PATH.EXP_PATH + "CM2.1p1.output.tar.gz", FILE_PATH.RESULT_PATH + "CM2.1p1.output" + i + ".tar.gz", true);
+        FileHelper.deleteFile(FILE_PATH.EXP_PATH + "CM2.1p1.output.tar.gz");
+        FileHelper.deleteFile(FILE_PATH.EXP_PATH + "fms.out");
+        System.out.println("The model finished, next step is find the best solution.");
+    }
 }

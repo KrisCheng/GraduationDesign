@@ -41,15 +41,15 @@ public class CTS_SS {
     private double[][] initList; //候选初始解列表
 
     private double[][] bestValue = new double[Dim][1]; //当前最优解
-    private double bestEvaluation = 0; //最优解扰动值
+    private double bestEvaluation = 0; //最优解适应度值
     Matrix bestSolution;
 
     private double[][] tempValue = new double[Dim][1]; //临时解
-    private double tempEvaluation = 0; //临时解扰动值
+    private double tempEvaluation = 0; //临时解适应度值
     Matrix tempSolution;
 
     private double[][] localValue = new double[Dim][1]; //局部解
-    private double localEvaluation = 0; //局部解扰动值
+    private double localEvaluation = 0; //局部解适应度值
     Matrix localSolution;
 
     Random random = new Random(); //生成随机数
@@ -154,10 +154,13 @@ public class CTS_SS {
         for (int t = 0; t < Dim; t++) {
             bestValue[t][0] = initList[t][0];
             tempValue[t][0] = bestValue[t][0];
+            localValue[t][0] = localValue[t][0];
         }
 //        bestEvaluation = adaptValue();//暂时未运行模式,注释
         bestSolution = convert(bestValue);
         tempSolution = bestSolution;
+        localSolution = bestSolution;
+
         try {
             //生成日志文件
             log = new FileOutputStream(new File(FILE_PATH.RESULT_PATH + "log.txt"));
@@ -206,26 +209,20 @@ public class CTS_SS {
                 e.printStackTrace();
             }
         }
+        //获取适应度值
         tempEvaluation = adaptValue();
 
-        //下次运行前需要删除的文件
-        FileHelper.deleteDirectory(FILE_PATH.OUTPUT_PATH + "ascii");
-        FileHelper.deleteDirectory(FILE_PATH.OUTPUT_PATH + "history");
-        FileHelper.deleteDirectory(FILE_PATH.OUTPUT_PATH + "RESTART");
-        FileHelper.deleteFile(FILE_PATH.OUTPUT_PATH + "data_table");
-        FileHelper.deleteFile(FILE_PATH.OUTPUT_PATH + "diag_table");
-        FileHelper.deleteFile(FILE_PATH.OUTPUT_PATH + "field_table");
-        FileHelper.deleteFile(FILE_PATH.OUTPUT_PATH + "input.nml");
-        //保存输出文件
-        FileHelper.copyFile(FILE_PATH.EXP_PATH + "CM2.1p1.output.tar.gz", FILE_PATH.RESULT_PATH + "CM2.1p1.output" + i + ".tar.gz", true);
-        FileHelper.deleteFile(FILE_PATH.EXP_PATH + "CM2.1p1.output.tar.gz");
-        FileHelper.deleteFile(FILE_PATH.EXP_PATH + "fms.out");
-        System.out.println("The model finished, next step is find the best solution.");
+        //文件清理工作
+        FileHelper.clear(i);
 
         if (!inTabuList(tempEvaluation)) {
             if (tempEvaluation > localEvaluation) {
+                //更好,替换
                 localEvaluation = tempEvaluation;
                 localSolution = temp;
+                for (int m = 0; m < Dim; m++) {
+                    localValue[m][0] = tempValue[i][0];
+                }
                 addtoTabuList(localEvaluation);
                 System.out.println("---------------------------");
                 System.out.println("Get a better solution: " + localEvaluation);
@@ -235,6 +232,13 @@ public class CTS_SS {
                     e.printStackTrace();
                 }
                 System.out.println("---------------------------");
+            } else {
+                System.out.println("No better solution got.");
+                try {
+                    log.write(("No better solution got. " + df.format(new Date()) + '\n').getBytes());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -243,7 +247,7 @@ public class CTS_SS {
     public double adaptValue() {
         NetcdfFile ncfile = null;
         try {
-            ncfile = NetcdfFile.open(FILE_PATH.HISTORY_PATH + "01310301.ocean_month.nc");
+            ncfile = NetcdfFile.open(FILE_PATH.HISTORY_PATH + "01310301.ocean_month.nc");//注意模式年
             Matrix outputMatrix = FileHelper.readRestartFile();
             //处理restart文件获得adaptValue
             //计算（sst-sst'）平方求和 该值即为适应度值
@@ -263,7 +267,6 @@ public class CTS_SS {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
         } catch (IOException ioe) {
             return -1;
         }
@@ -326,11 +329,21 @@ public class CTS_SS {
                 bestValue[i][0] = localValue[i][0];
             }
             System.out.println("---------------------------");
-            System.out.println("Cycle finished. Get a better solution: " + bestEvaluation);
+            System.out.println("One Cycle finished. Get a better solution: " + bestEvaluation);
+            try {
+                log.write(("One Cycle finished. Get a better solution: " + bestEvaluation + df.format(new Date()) + '\n').getBytes());
+            }catch (Exception e) {
+                e.printStackTrace();
+            }
             System.out.println("---------------------------");
         } else {
             System.out.println("---------------------------");
-            System.out.println("Cycle finished. no better solution found.");
+            System.out.println("One Cycle finished. no better solution found.");
+            try {
+                log.write(("One Cycle finished. no better solution found." + df.format(new Date()) + '\n').getBytes());
+            }catch (Exception e) {
+                e.printStackTrace();
+            }
             System.out.println("---------------------------");
         }
     }
