@@ -41,11 +41,11 @@ public class FileHelper {
             Index index = sstaArray.getIndex();
             Variable varBean = ncfile.findVariable(PARAMETER);
             Array origin = varBean.read();
-            for(int i = 62; i < 129; i++){
-                for(int j = 0; j < 219; j++){
+            for(int i = 62; i < 130; i++){
+                for(int j = 0; j < 220; j++){
                     Array tem = varBean.read("0:0:1, 0:0:1, " + i + ":" + i + ":1, " + j + ":" + j + ":1");
                     double[] k =  (double[])tem.copyTo1DJavaArray();
-                    double ssta = swarm.get(j * 200 + i, 0);
+                    double ssta = swarm.get(j,i);
                     sstaArray.set(index.set(0, 0, i, j), k[0] + ssta);
                 }
             }
@@ -322,6 +322,6 @@ public class FileHelper {
             e.printStackTrace();
             return "error";
         }
-
     }
+
 }
