@@ -134,11 +134,12 @@ public class CTS_SS {
         //获得initNumber个初始解,全部保存在initMatrix中
         Matrix initMatrix = tempTransMatrix.times(initSineMatrix);
         //todo:调用shell模式求解,在满足约束的条件(即禁忌判断参数)下,与适应度函数做对比,得到最优初始解(GFDL模式运行时间过长,此步骤省略)
+        
         //获取一个初始值作为输入扰动并将结果输出
         double[][] temp = new double[xAxis][yAxis];
         for (int m = 0; m < yAxis; m++) {
             for (int n = 0; n < xAxis; n++) {
-                temp[n][m] = initMatrix.get((m * n + n), 0);
+                temp[n][m] = initMatrix.get((m * 360 + n), 0);
             }
         }
         //todo:判断该解是否满足约束
