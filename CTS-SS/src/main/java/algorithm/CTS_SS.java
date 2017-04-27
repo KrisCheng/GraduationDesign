@@ -25,17 +25,19 @@ public class CTS_SS {
     private final int yAxis = 200;
     private final int Dim = 20; //特征空间维度(主成分数目)
 
-    private final int tabuLength = 10; //禁忌长度
+    private final int tabuLength = 5; //禁忌长度
     private final int initNumber = 1; //初始候选解数目
 
     private int m1; //阶段一候选解个数
-    private int m2; //阶段一候选解个数
-    private int R1; //阶段1邻域半径
-    private int R2; //阶段1邻域半径
+    private int m2; //阶段二候选解个数
+
+    private int R1; //阶段一邻域半径
+    private int R2; //阶段二邻域半径
+
     private int MAX_CYCLE1; //阶段一迭代次数
     private int MAX_CYCLE2; //阶段二迭代次数
 
-    private double tabuParameter; //禁忌判定参数
+    private double tabuParameter = 0; //禁忌判定参数
 
     private double[] tabuList = new double[tabuLength]; //禁忌表
     private double[][] initList; //候选初始解列表
@@ -52,14 +54,15 @@ public class CTS_SS {
     private double localEvaluation = 0; //局部解适应度值
     Matrix localSolution;
 
-    Random random = new Random(); //生成随机数
-    private int curCycle; //当前迭代次数
-    Matrix tempTransMatrix; //降维后矩阵
+    Random random = new Random(); //用于生成随机数
+    private int curCycle = 0; //当前迭代次数
+    Matrix tempTransMatrix; //存储降维后矩阵
 
     //日志文件和格式
     FileOutputStream log = null;
     SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
 
+    //构造函数,初始参数配置
     public CTS_SS(int s1, int r1, int cycle1, int s2, int r2, int cycle2, double para) {
         m1 = s1;
         R1 = r1;
@@ -100,7 +103,7 @@ public class CTS_SS {
         }
     }
 
-    //Sine生成初值是否满足初值约束
+    //TODO Sine生成初值是否满足初值约束
     public boolean isLegal(double[][] num) {
         Matrix p = new Matrix(num);
         p = tempTransMatrix.times(p);
@@ -116,32 +119,21 @@ public class CTS_SS {
             return false;
         }
         return true;
-
     }
 
     //生成Sine初值并记录
     public Matrix initSineMap() {
         initList = new double[Dim][initNumber];
-        //通过sin函数获取初始解并保存在单独文件中
+        //通过sin函数获取初始解
         for (int i = 0; i < initNumber; i++) {
-//            try {
-//                File file = new File(FILE_PATH.PCA_PATH + "PCA" + i + ".txt");
-//                PrintStream ps = new PrintStream(new FileOutputStream(file));
             for (int j = 0; j < Dim; j++) {
                 initList[j][i] = Math.sin(Math.PI * Math.random());//通过sin函数获取初始解
-//                    ps.println(initList[j][i]);
-//                    ps.close();
             }
-//            }
-//            catch (FileNotFoundException e) {
-//                e.printStackTrace();
-//            }
         }
         Matrix initSineMatrix = new Matrix(initList);
         //获得initNumber个初始解,全部保存在initMatrix中
         Matrix initMatrix = tempTransMatrix.times(initSineMatrix);
-        //记录初始解
-        //todo:调用shell模式求解,在满足约束的条件(即禁忌判断参数)下,与适应度函数做对比,得到最优初始解(GFDL模式运行时间过长,暂时取第0个)
+        //todo:调用shell模式求解,在满足约束的条件(即禁忌判断参数)下,与适应度函数做对比,得到最优初始解(GFDL模式运行时间过长,此步骤省略)
         //获取一个初始值作为输入扰动并将结果输出
         double[][] temp = new double[xAxis][yAxis];
         for (int m = 0; m < yAxis; m++) {
@@ -150,13 +142,13 @@ public class CTS_SS {
             }
         }
         //todo:判断该解是否满足约束
-        //存储初始解,即为最优解
+
+        //存储初始解,记为最优解
         for (int t = 0; t < Dim; t++) {
             bestValue[t][0] = initList[t][0];
             tempValue[t][0] = bestValue[t][0];
             localValue[t][0] = localValue[t][0];
         }
-//        bestEvaluation = adaptValue();//暂时未运行模式,注释
         bestSolution = convert(bestValue);
         tempSolution = bestSolution;
         localSolution = bestSolution;
@@ -166,14 +158,12 @@ public class CTS_SS {
             log = new FileOutputStream(new File(FILE_PATH.RESULT_PATH + "log.txt"));
             System.out.println("the logfile created.");
             log.write(("the logfile created." + " " + df.format(new Date()) + '\n').getBytes());
-
             System.out.println("---------------------------");
-//      System.out.println("the initialize CNOP is " + bestEvaluation); //暂时未运行模式,注释
             System.out.println("the initialize result is:");
             log.write(("the initialize result is:" + '\n').getBytes());
             for (int i = 0; i < Dim; i++) {
-                System.out.println(i + " : " + bestSolution.get(i, 0));
-                log.write((i + " : " + bestSolution.get(i, 0) + '\n').getBytes());
+                System.out.println(i + " : " + bestValue[i][0]);
+                log.write((i + " : " + bestValue[i][0] + '\n').getBytes());
             }
             System.out.println("Initialization finished. go to run the GFDL.");
             log.write(("Initialization finished. go to run the GFDL. " + df.format(new Date()) + '\n').getBytes());
@@ -209,9 +199,9 @@ public class CTS_SS {
                 e.printStackTrace();
             }
         }
+
         //获取适应度值
         tempEvaluation = adaptValue();
-
         //文件清理工作
         FileHelper.clear(i);
 
@@ -220,22 +210,30 @@ public class CTS_SS {
                 //更好,替换
                 localEvaluation = tempEvaluation;
                 localSolution = temp;
-                for (int m = 0; m < Dim; m++) {
-                    localValue[m][0] = tempValue[i][0];
-                }
-                addtoTabuList(localEvaluation);
                 System.out.println("---------------------------");
-                System.out.println("Get a better solution: " + localEvaluation);
+                System.out.println("Get a better local solution: " + localEvaluation);
+                System.out.println("the PCA listed below: " );
                 try {
-                    log.write(("Get a better solution: " + localEvaluation + " " + df.format(new Date()) + '\n').getBytes());
+                    log.write(("Get a better local solution: " + localEvaluation + " " + df.format(new Date()) + '\n').getBytes());
+                    log.write(("the PCA listed below: "+'\n').getBytes());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+                for (int m = 0; m < Dim; m++) {
+                    localValue[m][0] = tempValue[i][0];
+                    System.out.println(localValue[m][0]);
+                    try {
+                        log.write((m + " : " + localValue[m][0] + '\n').getBytes());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+                addtoTabuList(localEvaluation);
                 System.out.println("---------------------------");
             } else {
-                System.out.println("No better solution got.");
+                System.out.println("No better local solution got.");
                 try {
-                    log.write(("No better solution got. " + df.format(new Date()) + '\n').getBytes());
+                    log.write(("No better local solution got. " + df.format(new Date()) + '\n').getBytes());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -247,7 +245,7 @@ public class CTS_SS {
     public double adaptValue() {
         NetcdfFile ncfile = null;
         try {
-            ncfile = NetcdfFile.open(FILE_PATH.HISTORY_PATH + "01310301.ocean_month.nc");//注意模式年
+            ncfile = NetcdfFile.open(FILE_PATH.HISTORY_PATH + "01310301.ocean_month.nc");//注意当前模式年
             Matrix outputMatrix = FileHelper.readRestartFile();
             //处理restart文件获得adaptValue
             //计算（sst-sst'）平方求和 该值即为适应度值
@@ -275,17 +273,12 @@ public class CTS_SS {
 
     //领域交换,产生一个新解
     public double[][] swap(int radius, double[][] tempChr) {
-        double[][] temp = new double[Dim][1];
-        for (int k = 0; k < Dim; k++) {
-            temp[k][0] = tempChr[k][0];
-        }
         for (int i = 0; i < radius; i++) {
             int rand = random.nextInt(65535) % Dim;
             tempChr[rand][0] = Math.sin(Math.PI * Math.random());
         }
-        return temp;
+        return tempChr;
     }
-
 
     // 判断某个解是否在禁忌表中
     public boolean inTabuList(double adaptValue) {
@@ -297,7 +290,7 @@ public class CTS_SS {
         return false;
     }
 
-    //TODO 解除禁忌与加入禁忌表
+    //将所求解加入禁忌表
     public void addtoTabuList(double tempChr) {
         for (int i = 0; i < tabuLength - 1; i++) {
             tabuList[i] = tabuList[i + 1];
@@ -313,7 +306,7 @@ public class CTS_SS {
         double[][] tempList = new double[xAxis][yAxis];
         for (int m = 0; m < yAxis; m++) {
             for (int n = 0; n < xAxis; n++) {
-                tempList[n][m] = finalVector.get((m * n + n), 0);
+                tempList[n][m] = finalVector.get((m * 360 + n), 0);
             }
         }
         return new Matrix(tempList);
@@ -331,7 +324,7 @@ public class CTS_SS {
             System.out.println("---------------------------");
             System.out.println("One Cycle finished. Get a better solution: " + bestEvaluation);
             try {
-                log.write(("One Cycle finished. Get a better solution: " + bestEvaluation + df.format(new Date()) + '\n').getBytes());
+                log.write(("One Cycle finished. Get a better solution: " + bestEvaluation + " " + df.format(new Date()) + '\n').getBytes());
             }catch (Exception e) {
                 e.printStackTrace();
             }
@@ -340,7 +333,7 @@ public class CTS_SS {
             System.out.println("---------------------------");
             System.out.println("One Cycle finished. no better solution found.");
             try {
-                log.write(("One Cycle finished. no better solution found." + df.format(new Date()) + '\n').getBytes());
+                log.write(("One Cycle finished. no better solution found. " + df.format(new Date()) + '\n').getBytes());
             }catch (Exception e) {
                 e.printStackTrace();
             }
@@ -353,6 +346,11 @@ public class CTS_SS {
         //1.初始化
         bestSolution = initSineMap();
         int times = 0;//第几次运行模式
+        //初始化禁忌表
+        for(int n = 0; n < tabuLength; n++){
+            tabuList[n] = 0;
+        }
+
         //2.分阶段搜索
         for (curCycle = 1; curCycle <= MAX_CYCLE1; curCycle++) {
             for (int i = 0; i < m1; i++) {
@@ -384,9 +382,10 @@ public class CTS_SS {
             log.write(("the best CNOP is " + bestEvaluation + '\n').getBytes());
             System.out.println("the best result is:");
             for (int i = 0; i < Dim; i++) {
-                System.out.println(i + " : " + bestSolution.get(i, 0));
-                log.write((i + " : " + bestSolution.get(i, 0) + '\n').getBytes());
+                System.out.println(i + " : " + bestValue[i][0]);
+                log.write((i + " : " + bestValue[i][0] + '\n').getBytes());
             }
+
         } catch (Exception e) {
             e.printStackTrace();
         }

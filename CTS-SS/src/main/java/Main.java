@@ -11,7 +11,7 @@ public class Main {
     public static void main(String[] args) throws IOException {
         CTS_SS cts_ss = new CTS_SS(1, 10, 2, 1, 5, 2, 1);
         String filename = FILE_PATH.DATA_PATH+"sst_20.xlsx";
-        cts_ss.init(filename);
-        cts_ss.solution();
+        cts_ss.init(filename);//获取降为后数据矩阵
+        cts_ss.solution();//求解过程
     }
 }

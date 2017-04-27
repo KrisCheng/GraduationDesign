@@ -19,24 +19,15 @@ import java.util.Date;
 public class Test {
 
     public static void main(String args[]) {
-        FileOutputStream out = null;
-        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
-        try {
-
-            out = new FileOutputStream(new File("src/main/java/test.txt"));
-
-            long begin = System.currentTimeMillis();
-
-            for (int i = 0; i < 10; i++) {
-
-                out.write(("hello world"+" "+df.format(new Date())+'\n').getBytes());
-
+        double [][]a = new double[10][10];
+        for(int i = 0; i < 10; i++){
+            for(int j = 0; j < 10; j++){
+                a[i][j] = i*10+j+1;
+                System.out.print(a[i][j]+" ");
             }
-            out.close();
-        }catch (Exception e) {
-
-            e.printStackTrace();
-
+            System.out.println();
         }
+        Matrix test = new Matrix(a);
+        System.out.println(test.get(2,2));
     }
 }
