@@ -352,7 +352,7 @@ public class CTS_SS {
     public void solution() {
         //1.初始化
         bestSolution = initSineMap();
-        int times = 1;//第几次运行模式
+        int times = 0;//第几次运行模式
         //2.分阶段搜索
         for (curCycle = 1; curCycle <= MAX_CYCLE1; curCycle++) {
             for (int i = 0; i < m1; i++) {
@@ -384,8 +384,8 @@ public class CTS_SS {
             log.write(("the best CNOP is " + bestEvaluation + '\n').getBytes());
             System.out.println("the best result is:");
             for (int i = 0; i < Dim; i++) {
-                System.out.println(i + " : " + bestValue[i][0]);
-                log.write((i + " : " + bestValue[i][0] + '\n').getBytes());
+                System.out.println(i + " : " + bestSolution.get(i, 0));
+                log.write((i + " : " + bestSolution.get(i, 0) + '\n').getBytes());
             }
         } catch (Exception e) {
             e.printStackTrace();
