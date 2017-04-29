@@ -122,7 +122,7 @@ public class CTS_SS {
     }
 
     //生成Sine初值并记录
-    public Matrix initSineMap() {
+    public void initSineMap() {
         initList = new double[Dim][initNumber];
         //通过sin函数获取初始解
         for (int i = 0; i < initNumber; i++) {
@@ -144,11 +144,16 @@ public class CTS_SS {
         }
         //todo:判断该解是否满足约束
 
+        //初始化tabuList
+        for (int m = 0; m < tabuLength; m++) {
+            tabuList[m] = 0;
+        }
+
         //存储初始解,记为最优解
         for (int t = 0; t < Dim; t++) {
             bestValue[t][0] = initList[t][0];
-            tempValue[t][0] = bestValue[t][0];
-            localValue[t][0] = localValue[t][0];
+            tempValue[t][0] = initList[t][0];
+            localValue[t][0] = initList[t][0];
         }
         bestSolution = convert(bestValue);
         tempSolution = bestSolution;
@@ -163,8 +168,8 @@ public class CTS_SS {
             System.out.println("the initialize result is:");
             log.write(("the initialize result is:" + '\n').getBytes());
             for (int i = 0; i < Dim; i++) {
-                System.out.println(i + " : " + bestValue[i][0]);
-                log.write((i + " : " + bestValue[i][0] + '\n').getBytes());
+                System.out.println(i + " : " + tempValue[i][0]);
+                log.write((i + " : " + tempValue[i][0] + '\n').getBytes());
             }
             System.out.println("Initialization finished. go to run the GFDL.");
             log.write(("Initialization finished. go to run the GFDL. " + df.format(new Date()) + '\n').getBytes());
@@ -172,7 +177,6 @@ public class CTS_SS {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return new Matrix(temp);
     }
 
 
@@ -191,7 +195,7 @@ public class CTS_SS {
                 String tem = ShellHelper.exec("bjobs");
                 if (tem.equals("")) {
                     System.out.println("GFDL run finished!");
-                    log.write(("GFDL run finished!" + '\n').getBytes());
+                    log.write(('\n' + "GFDL run finished!" + '\n').getBytes());//一次新模式完成标志
                     break;
                 } else {
                     System.out.println("This cycle not finished! Waiting...");
@@ -221,7 +225,7 @@ public class CTS_SS {
                     e.printStackTrace();
                 }
                 for (int m = 0; m < Dim; m++) {
-                    localValue[m][0] = tempValue[i][0];
+                    localValue[m][0] = tempValue[m][0];
                     System.out.println(localValue[m][0]);
                     try {
                         log.write((m + " : " + localValue[m][0] + '\n').getBytes());
@@ -298,6 +302,12 @@ public class CTS_SS {
         }
         //将新的最优解加入禁忌表
         tabuList[tabuLength - 1] = tempChr;
+        try {
+            log.write(("The value : " + tempChr + " has added to the Tabulist. " + df.format(new Date()) + '\n').getBytes());
+            log.write(("The value : " + tabuList[0] + " has deleted from the Tabulist. " + df.format(new Date()) + '\n').getBytes());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     //主成分与目标矩阵的转换方法
@@ -314,8 +324,8 @@ public class CTS_SS {
     }
 
     //判断本次迭代有没有获得更优解,如有,替换
-    public void isBest(double localEvaluation, double bestEvaluation) {
-        if (localEvaluation - bestEvaluation > tabuParameter) {
+    public double isBest(double localEvaluation, double bestEvaluation) {
+        if ( (localEvaluation - bestEvaluation) > 0 ) {
             //获得更优解,更新并输出
             bestEvaluation = localEvaluation;
             bestSolution = localSolution;
@@ -340,12 +350,13 @@ public class CTS_SS {
             }
             System.out.println("---------------------------");
         }
+        return bestEvaluation;
     }
 
     //初始并分阶段搜索
     public void solution() {
         //1.初始化
-        bestSolution = initSineMap();
+        initSineMap();
         int times = 0;//第几次运行模式
         //初始化禁忌表
         for(int n = 0; n < tabuLength; n++){
@@ -355,13 +366,16 @@ public class CTS_SS {
         //2.分阶段搜索
         for (curCycle = 1; curCycle <= MAX_CYCLE1; curCycle++) {
             for (int i = 0; i < m1; i++) {
-                tempValue = swap(R1, tempValue);
+                if(0 != times) { //第一次不交换
+                    tempValue = swap(R1, tempValue);
+                }
                 tempSolution = convert(tempValue);
                 evaluate(tempSolution, times);
                 times++;
             }
-            isBest(localEvaluation, bestEvaluation);
+            bestEvaluation = isBest(localEvaluation, bestEvaluation);
         }
+
         for (curCycle = 1; curCycle <= MAX_CYCLE2; curCycle++) {
             for (int i = 0; i < m2; i++) {
                 tempValue = swap(R2, tempValue);
@@ -369,14 +383,14 @@ public class CTS_SS {
                 evaluate(tempSolution, times);
                 times++;
             }
-            isBest(localEvaluation, bestEvaluation);
+            bestEvaluation = isBest(localEvaluation, bestEvaluation);
         }
 
         //3.打印结果
         System.out.println("---------------------------");
         System.out.println("the program finished.");
         try {
-            log.write(("the program finished. " + df.format(new Date()) + '\n').getBytes());
+            log.write(('\n' + "the program finished. " + df.format(new Date()) + '\n').getBytes());
             System.out.println("the model run " + times + " times.");
             log.write(("the model run " + times + " times." + '\n').getBytes());
             System.out.println("the best CNOP is " + bestEvaluation);
