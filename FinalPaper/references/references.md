@@ -1,0 +1,11 @@
+# 参考文献
+
+[1]	Mu M., Duan W. S. & Wang B., Conditional nonlinear optimal perturbation and its applications. Nonlinear Processes in Geophysics, 2003, 10: 493-501
+[2]	穆穆，段晚锁.ENSO 可预报性研究的一个新方法:条件非线性最优扰动.科学通报, 2003,48(7):747-749
+
+[3] 陈磊. ENSO最优前期征兆和最快增长初始误差的相似性及其在识别ENSO目标观测敏感区中的应用[博士学位论文].北京：中国科学院大学, 2015
+
+[4] 温仕成. 求解CNOP的算法优化及其应用[博士学位论文].上海：同济大学, 2015
+
+[5]
+
