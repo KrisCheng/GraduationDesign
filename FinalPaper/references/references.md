@@ -12,3 +12,7 @@
 [6]Yuan S., Qian Y., Mu B. (2015) Paralleled Continuous Tabu Search Algorithm with Sine Maps and Staged Strategy for Solving CNOP. In: Wang G., Zomaya A., Martinez Perez G., Li K. (eds) Algorithms and Architectures for Parallel Processing. Lecture Notes in Computer Science, vol 9530. Springer, Cham
 
 [7]孟佳佳，杨宇星. GFDL模式对太平洋海表面温度的年际和年代际变率的模拟评估.海洋科学, 2016
+
+[8]胡一波. 求解约束化问题的几种智能算法[博士学位论文].陕西：西安电子科技大学, 2009
+
+[9]
